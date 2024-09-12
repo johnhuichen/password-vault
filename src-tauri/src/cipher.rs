@@ -25,33 +25,3 @@ impl Cipher {
         cocoon.wrap(data)
     }
 }
-
-// pub fn encrypt(key_str: &str, url: &str, password: &str, path: &str) -> Result<(), EncryptError> {
-//     // what happens if path doesn't exist
-//     let mut file = File::open(path)?;
-//
-//     // let mut cocoon = Cocoon::new(key_str);
-//     // let mut db = Database {
-//     //     inner: HashMap::new(),
-//     // };
-//     // db.inner.insert(url, password);
-//     // let encoded = db.try_to_vec().unwrap();
-//     // let container = cocoon.dump(encoded, &mut file)?;
-//     //
-//     Ok(())
-// }
-// // #[tauri::command]
-// // pub fn signUp(key_str: String, timestamp: String) {
-// //     //masterkey validation?
-// //
-// //     //create a file
-// //
-// //     //encrypt the timestamp and write it to the file
-// // }
-// //
-// // #[tauri::command]
-// // pub fn logIn(key_str: String) {
-// //     //find the file and opens it
-// //
-// //     //decrypt the file and validate the timestamp
-// // }
