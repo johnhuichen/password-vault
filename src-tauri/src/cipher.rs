@@ -1,4 +1,14 @@
+use std::fmt::Debug;
+use std::io::{Read, Write};
+
 use cocoon::Cocoon;
+use snafu::{ResultExt, Snafu};
+
+#[derive(Debug, Snafu)]
+pub enum CipherError {
+    #[snafu(display("Encryption/Decryption Error: {:?}", source))]
+    Cocoon { source: cocoon::Error },
+}
 
 #[derive(Debug)]
 pub struct Cipher {
@@ -12,16 +22,14 @@ impl Cipher {
         }
     }
 
-    pub fn decrypt(&self, data: &[u8]) -> Result<String, cocoon::Error> {
-        let cocoon = Cocoon::new(self.masterkey.as_bytes());
-        cocoon.unwrap(data).map(|b| {
-            String::from_utf8(b).unwrap_or_else(|e| panic!("Cannot parse string from data: {e}"))
-        })
+    pub fn dump(&self, data: Vec<u8>, writer: &mut impl Write) -> Result<(), CipherError> {
+        let mut cocoon = Cocoon::new(self.masterkey.as_bytes());
+        cocoon.dump(data, writer).context(CocoonSnafu)?;
+        Ok(())
     }
 
-    pub fn encrypt(&self, data: &str) -> Result<Vec<u8>, cocoon::Error> {
-        let data = data.as_bytes();
-        let mut cocoon = Cocoon::new(self.masterkey.as_bytes());
-        cocoon.wrap(data)
+    pub fn parse(&self, reader: &mut impl Read) -> Result<Vec<u8>, CipherError> {
+        let cocoon = Cocoon::new(self.masterkey.as_bytes());
+        cocoon.parse(reader).context(CocoonSnafu)
     }
 }
