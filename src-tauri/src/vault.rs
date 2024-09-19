@@ -3,7 +3,7 @@ use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use snafu::{ensure, ResultExt, Snafu};
+use snafu::{Location, ResultExt, Snafu};
 
 use crate::cipher::Cipher;
 use crate::cipher::CipherError;
@@ -11,15 +11,19 @@ use crate::passwords::Passwords;
 
 #[derive(Debug, Snafu)]
 pub enum VaultError {
-    #[snafu(display("IO Error: {:?}", source))]
+    #[snafu(display("IO Error, loc: {location}"))]
     #[snafu(context(false))]
-    IO { source: std::io::Error },
+    IO {
+        source: std::io::Error,
+        #[snafu(implicit)]
+        location: Location,
+    },
 
-    #[snafu(display("Cipher Error: {:?}", source))]
+    #[snafu(display("Cipher Error"))]
     Cipher { source: CipherError },
 
-    #[snafu(display("Should prompt for sign up"))]
-    ShouldSignUp,
+    #[snafu(display("Master key"))]
+    MasterKey,
 }
 
 #[derive(Debug, Snafu)]
@@ -32,36 +36,28 @@ pub type Result<T> = std::result::Result<T, VaultError>;
 
 #[derive(Debug)]
 pub struct Vault {
-    cipher: Option<Cipher>,
-    path: Option<PathBuf>,
+    cipher: Cipher,
+    path: PathBuf,
 }
 
 impl Vault {
-    pub fn new() -> Result<Self> {
-        Ok(Vault {
-            cipher: None,
-            path: None,
-        })
-    }
-
-    pub fn login(&mut self, masterkey: String) -> Result<()> {
+    pub fn new(masterkey: String) -> Result<Self> {
         let cipher = Cipher::new(masterkey);
 
         let path = Path::new("./passwd");
+        let result = Vault {
+            cipher,
+            path: path.to_owned(),
+        };
 
-        ensure!(path.exists(), ShouldSignUpSnafu);
         if !path.exists() {
-
-            // should not login
-            // should prompt to enter a master key
-            // File::create(path)?;
-            // self.path = Some(path.to_owned());
-            // self.save_to_file(Passwords::empty())?;
-        } else {
-            //
+            File::create(path)?;
+            result.save_to_file(Passwords::empty())?;
+        } else if result.decrypt_from_file().is_err() {
+            return Err(VaultError::MasterKey);
         }
 
-        Ok(())
+        Ok(result)
     }
 
     pub fn view_passwords(&self) -> Result<()> {

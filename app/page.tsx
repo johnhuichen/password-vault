@@ -14,7 +14,7 @@ export default function Home() {
       <div>The Response is {response}</div>
       <button
         onClick={() =>
-          invoke<string>("login", { masterKey: "Next.js" }).then((res) => {
+          invoke<string>("login", { masterkey: "1" }).then((res) => {
             setResponse(res);
           })
         }
