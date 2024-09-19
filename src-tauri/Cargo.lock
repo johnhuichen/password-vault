@@ -119,8 +119,10 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "aes-gcm",
+ "base64 0.22.1",
  "borsh",
  "cocoon",
+ "futures-io",
  "hex",
  "serde",
  "serde_json",
@@ -503,6 +505,7 @@ dependencies = [
  "pbkdf2",
  "rand 0.8.5",
  "sha2 0.9.9",
+ "thiserror",
  "zeroize",
 ]
 

@@ -7,6 +7,7 @@ use self::cipher::Cipher;
 use self::vault::Vault;
 
 mod cipher;
+mod passwords;
 mod vault;
 
 #[snafu::report]
@@ -16,18 +17,26 @@ fn main() -> Result<(), Whatever> {
     //     .expect("error while running tauri application");
 
     let cipher = Cipher::new("masterkey");
-    // let encrypted = cipher.encrypt("test123:pass123").unwrap();
-    // println!("encrypted: {encrypted:?}");
-    // let decrypted = cipher.decrypt(&encrypted);
-    // println!("decrypted: {decrypted:?}");
+
     let vault = Vault::new(cipher).whatever_context("Cannot create a vault")?;
     vault
         .add_password("domain", "password")
         .whatever_context("Cannot add password")?;
+    vault
+        .update_password("domain", "another password")
+        .whatever_context("cannot add second password")?;
+    vault.view_passwords().whatever_context("whatever")?;
 
-    // if let Err(e) = vault.encrypt("domain", "password") {
-    //     println!("{:?}", e);
-    // }
+    println!("Try to delete something that does not exist");
+    vault
+        .delete_password("foobar")
+        .whatever_context("whatever")?;
+    vault.view_passwords().whatever_context("whatever")?;
 
+    println!("Try to delete something that exists");
+    vault
+        .delete_password("domain")
+        .whatever_context("whatever")?;
+    vault.view_passwords().whatever_context("whatever")?;
     Ok(())
 }
