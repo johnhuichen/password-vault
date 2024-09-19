@@ -3,7 +3,7 @@ use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use snafu::{ResultExt, Snafu};
+use snafu::{ensure, ResultExt, Snafu};
 
 use crate::cipher::Cipher;
 use crate::cipher::CipherError;
@@ -17,6 +17,9 @@ pub enum VaultError {
 
     #[snafu(display("Cipher Error: {:?}", source))]
     Cipher { source: CipherError },
+
+    #[snafu(display("Should prompt for sign up"))]
+    ShouldSignUp,
 }
 
 #[derive(Debug, Snafu)]
@@ -29,24 +32,36 @@ pub type Result<T> = std::result::Result<T, VaultError>;
 
 #[derive(Debug)]
 pub struct Vault {
-    cipher: Cipher,
-    path: PathBuf,
+    cipher: Option<Cipher>,
+    path: Option<PathBuf>,
 }
 
 impl Vault {
-    pub fn new(cipher: Cipher) -> Result<Self> {
-        let path = Path::new("./passwd");
-        let result = Vault {
-            cipher,
-            path: path.to_owned(),
-        };
+    pub fn new() -> Result<Self> {
+        Ok(Vault {
+            cipher: None,
+            path: None,
+        })
+    }
 
+    pub fn login(&mut self, masterkey: String) -> Result<()> {
+        let cipher = Cipher::new(masterkey);
+
+        let path = Path::new("./passwd");
+
+        ensure!(path.exists(), ShouldSignUpSnafu);
         if !path.exists() {
-            File::create(path)?;
-            result.save_to_file(Passwords::empty())?;
+
+            // should not login
+            // should prompt to enter a master key
+            // File::create(path)?;
+            // self.path = Some(path.to_owned());
+            // self.save_to_file(Passwords::empty())?;
+        } else {
+            //
         }
 
-        Ok(result)
+        Ok(())
     }
 
     pub fn view_passwords(&self) -> Result<()> {
